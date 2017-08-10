@@ -57,6 +57,60 @@ function options
     echo $user_input
 }
 
+function setup-python
+{
+    #Python dependencies for visualizer and ipop python tests
+    sudo apt-get install -y python python-pip python-lxc
+    sudo pip install --upgrade pip
+    sudo pip install pymongo sleekxmpp psutil
+}
+
+function setup-mongo
+{
+    if [[  ! ( "$is_external" = true ) ]]; then
+        #Install and start mongodb for use ipop python tests
+        sudo apt-get -y install mongodb
+    fi
+}
+
+function setup-build-deps
+{
+    sudo apt install -y software-properties-common git make libssl-dev g++-4.9
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 10
+}
+
+function setup-base-container
+{
+
+}
+
+function setup-ejabberd
+{
+
+}
+
+function setup-visualizer
+{
+    echo -e "\e[1;31mEnter visualizer github URL(default: $DEFAULT_VISUALIZER_REPO) \e[0m"
+    read githuburl_visualizer
+    if [ -z "$githuburl_visualizer"]; then
+        githuburl_visualizer=$DEFAULT_VISUALIZER_REPO
+    fi
+    git clone $DEFAULT_VISUALIZER_REPO
+    cd IPOPNetVisualizer
+
+    echo -e "\e[1;31mDo you want to continue using master branch(Y/N):\e[0m"
+    read user_input
+    if [[ $user_input =~ [Nn](o)* ]]; then
+       echo -e "Enter git repo branch name:"
+       read github_branch
+       git checkout $github_branch
+    fi
+    chmod +x setup_visualizer.sh
+    ./setup_visualizer.sh
+    cd ..
+}
+
 function configure
 {
     # if argument is true mongodb and ejabberd won't be installed
@@ -74,8 +128,8 @@ function configure
     fi
 
     #Prepare Tincan for compilation
-    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    sudo apt-get update -y
+    #sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    #sudo apt-get update -y
     sudo apt-get -y install lxc g++-4.9
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 10
 
@@ -88,10 +142,10 @@ function configure
 
     # install controller dependencies
     if [ $VPNMODE = "switch" ]; then
-        sudo pip install sleekxmpp pystun psutil
+        sudo pip install sleekxmpp psutil
     else
         sudo chroot /var/lib/lxc/default/rootfs apt-get -y install 'python-pip'
-        sudo chroot /var/lib/lxc/default/rootfs pip install 'sleekxmpp' pystun psutil
+        sudo chroot /var/lib/lxc/default/rootfs pip install 'sleekxmpp' psutil
     fi
 
     echo 'lxc.cgroup.devices.allow = c 10:200 rwm' | sudo tee --append $DEFAULT_LXC_CONFIG
