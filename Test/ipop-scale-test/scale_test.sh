@@ -81,12 +81,12 @@ function setup-build-deps
 
 function setup-base-container
 {
-
+    echo setup-base-container
 }
 
 function setup-ejabberd
 {
-
+     echo setup-ejabberd
 }
 
 function setup-visualizer
